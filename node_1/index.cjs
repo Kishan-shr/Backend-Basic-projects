@@ -7,7 +7,7 @@ const app = express()
 const port = 4000
 
 app.get('/', (req, res) => {
-  res.send('prince')
+  res.send(' hlw prince')
 })
 
 app.get('/twitter' ,(req,res)=>{
@@ -20,7 +20,9 @@ app.get('/login',(req,res)=>{
 app.get('/Home',(req,res)=>{
     res.send("<h1>Home page</h1>")
 })
-
+app.get("/contact", (req,res)=>{
+res.send("please contact your fb to get assistance from our executive")
+})
 
 app.listen(process.env.PORT, () => {
   console.log(`Example app listening on port ${port}`)
