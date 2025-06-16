@@ -1,0 +1,1 @@
+export const DB_Name = "streaming_platform"
