@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { APiResponse } from "../utils/ApiResponse.js"
 import { JsonWebTokenError } from "jsonwebtoken"
+import { upload } from "../middlewares/multer.middleware.js"
 
 const generateAccessAndRefreshTokens = async(userId)=>{
     try {
@@ -82,7 +83,7 @@ if(!avatarLocalPath){
     new APiResponse(200, createdUser,"User registered Successfully")
  )
 })
-const loginUser = asyncHandler(async (req,res)=>{
+const loginUser = asyncHandler(async (req, res)=>{
 // req body -> data
 //username or email
 //find the user
@@ -122,7 +123,7 @@ return res
     "User logged iN successfully"
 ))
 })
-const logoutUser = asyncHandler(async(req,res)=>{
+const logoutUser = asyncHandler(async(req, res)=>{
 await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -143,7 +144,7 @@ return res
 .clearCookie("refreshToken",options)
 .json( new APiResponse(200,{},"User logged Out"))
 })
-const refreshAccessToken = asyncHandler(async(req,res)=>{
+const refreshAccessToken = asyncHandler(async(req, res)=>{
     const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken
     if(!incomingRefreshToken){
         throw new ApiError(401,"unauthorized request")
@@ -178,8 +179,98 @@ try {
     throw new ApiError(401,error?.message || "Invalid refresh token")
 }
 })
+const changeCurrentPassword = asyncHandler(async(req, res)=>{
+    const {oldPassword , newPassword , confPassword} = req.body
+        const user = await User.findById(req.User?._id)
+      const isPasswordCorrect  = await user.isPasswordCorrect(oldPassword)
+      //for confirm password logic
+      if(!(newPassword === confPassword)){
+        throw new ApiError(400, "New and Confirmed mismatch")
+      }
+      if(!isPasswordCorrect){
+        throw new ApiError(400,"Invalid old password")
+      }
+      user.password = newPassword
+     await user.save({validateBeforeSave:false})
+     return res
+     .status(200)
+     .json(new APiResponse(200,{},"Password changed successfully"))
+})
+const getCurrentUser = asyncHandler(async(req, res)=>{
+    return res
+    .status(200)
+    .json(200, req.user,"current user fetched successfully")
+})
+const updateAccountDetails = asyncHandler(async(req, res)=>{
+    const {fullName,email}= req.body
+    if(!(fullName || email)){
+        throw new ApiError(400,"All fields are required")
+    }
+  const user = User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                fullName,
+                email:email
+            }
+        },
+        {new:true}
+    ).select("-password")
+    return res
+    .status(200)
+    .json(new APiResponse(200,user,"Account details update successfully"))
+})
+const updateUserAvatar = asyncHandler(async(req, res)=>{
+const avatarLocalPath = req.file?.path
+if(!avatarLocalPath){
+    throw new ApiError(400,"Avatar file is missing")
+}
+const avatar = await uploadOnCloudinary(avatarLocalPath)
+if(!avatar.url){
+    throw new ApiError(400,"Error while uploading on avatar")
+}
+const user =await User.findByIdAndUpdate(
+    req.user?._id,
+{
+    $set:{avatar:avatar.url}
+},
+{new:true}
+).select("_password")
+return res
+.status(200)
+.json(
+    new ApiError(200,user,"Avatar Updated successfully")
+)
+})
+const updateUserCoverImage = asyncHandler(async(req, res)=>{
+const coverImageLocalPath = req.file?.path
+if(!coverImageLocalPath){
+    throw new ApiError(400,"CoverImage file is missing")
+}
+const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+if(!coverImage.url){
+    throw new ApiError(400,"Error while uploading on CoverImage")
+}
+const user =await User.findByIdAndUpdate(
+    req.user?._id,
+{
+    $set:{coverImage:coverImage.url}
+},
+{new:true}
+).select("_password")
+return res
+.status(200)
+.json(
+    new ApiError(200,user,"Cover Image Updated successfully")
+)
+})
 export {
     registerUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar,   
+    updateUserCoverImage
 }
