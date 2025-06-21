@@ -1,8 +1,8 @@
-import { ApiError } from "../utils/ApiError";
-import { APiResponse } from "../utils/ApiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
+import { ApiError } from "../utils/ApiError.js";
+import { APiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
-import { user } from "../models/user.model";
+import { User as user } from "../models/user.model.js";
 
 // id their on response then instead of res we can underscore "_"
 export const verifyJWT = asyncHandler(async(req,_,next)=>{ //here we can use underscore "_"

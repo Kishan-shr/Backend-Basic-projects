@@ -38,7 +38,7 @@ const userSchema = new Schema({
         type:Schema.Types.ObjectId,
         ref:"video"
     }],
-    referToken:{
+    refreshToken:{
         type:String
     }
 },{timestamps:true})
