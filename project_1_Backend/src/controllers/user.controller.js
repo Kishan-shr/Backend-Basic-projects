@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { APiResponse } from "../utils/ApiResponse.js"
 import { JsonWebTokenError } from "jsonwebtoken"
 import { upload } from "../middlewares/multer.middleware.js"
+import { subscription } from "../models/subscription.model.js"
 
 const generateAccessAndRefreshTokens = async(userId)=>{
     try {
@@ -206,7 +207,7 @@ const updateAccountDetails = asyncHandler(async(req, res)=>{
     if(!(fullName || email)){
         throw new ApiError(400,"All fields are required")
     }
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
@@ -225,6 +226,8 @@ const avatarLocalPath = req.file?.path
 if(!avatarLocalPath){
     throw new ApiError(400,"Avatar file is missing")
 }
+//TODO: delete old image - assignment
+// Highlight: delete old image - assignment
 const avatar = await uploadOnCloudinary(avatarLocalPath)
 if(!avatar.url){
     throw new ApiError(400,"Error while uploading on avatar")
@@ -262,6 +265,73 @@ return res
 .status(200)
 .json(
     new ApiError(200,user,"Cover Image Updated successfully")
+)
+})
+const getUserChannelProfile = asyncHandler(async(req,res)=>{
+const {username} = req.params
+if(!username?.trim()){
+    throw new ApiError(400,"User is Missing")
+}
+// User.find({username})  // this approach is good , but in your case we will use aggregation pipeline
+const channel= await User.aggregate([
+    {
+    $match:{
+        username:username?.toLowerCase()
+    },
+},
+{
+    $lookup:{
+     from:"subscriptions",
+     localField:"_id",
+     foreignField:"channel",
+     as:"subscribers"
+    },
+},
+    {
+$lookup:{
+from:"subscriptions",
+localField:"_id",
+foreignField:"subscriber",
+as:"subscribedTo"
+}
+},
+    {
+     $addFields:{
+        subscribersCount:{
+            $size:"$subscribers"
+        },
+        channelsSubscribedToCount:{
+           $size:"$subscribedTo"
+        },
+        isSubscribed:{
+            $cond:{
+                if:{$in:[req.user?._id,"$subscribers.subscriber"]},
+                then:true,
+                else:false
+            }
+        }
+     }
+    },
+    {
+        $project:{
+            fullName:1,
+            username:1,
+            subscribersCount:1,
+            channelsSubscribedToCount:1,
+            isSubscribed:1,
+            avatar:1,
+            coverImage:1,
+            email:1
+        }
+    }
+])
+if(!channel?.length){
+    throw new ApiError(404,"channel does not exists")
+}
+return res
+.status(200)
+.json(
+    new APiResponse(200,channel[0],"User channel fetched successfully")
 )
 })
 export {
