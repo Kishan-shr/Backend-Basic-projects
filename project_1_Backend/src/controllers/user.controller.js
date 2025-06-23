@@ -3,7 +3,7 @@ import {ApiError} from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { APiResponse } from "../utils/ApiResponse.js"
-import { JsonWebTokenError } from "jsonwebtoken"
+import  JsonWebTokenError  from "jsonwebtoken"
 import { upload } from "../middlewares/multer.middleware.js"
 import { subscription } from "../models/subscription.model.js"
 import mongoose from "mongoose"
@@ -129,8 +129,8 @@ const logoutUser = asyncHandler(async(req, res)=>{
 await User.findByIdAndUpdate(
     req.user._id,
     {
-        $set:{
-            refreshToken:undefined
+        $unset:{
+            refreshToken:1  //this removes the fields from Document , null or undefined also works
         }
     },{
         new:true
@@ -387,10 +387,12 @@ export {
     registerUser,
     loginUser,
     logoutUser,
+    refreshAccessToken,
     changeCurrentPassword,
     getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,   
     updateUserCoverImage,
+    getUserChannelProfile,
     getWatchHistory
 }
