@@ -9,10 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.2",
     "mongoose": "^8.16.1",
     "next": "15.3.4",
+    "nodemailer": "^7.0.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "save-dev": "^0.0.1-security"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
