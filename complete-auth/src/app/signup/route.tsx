@@ -1,5 +1,5 @@
-import {connect} from '@dbConfig/dbConfig'
-import User from '@/models/userModel'
+import { connect as connectDB } from '@/dbconfig/dbconfig'
+import User from '@/app/models/userModel'
 import { NextRequest , NextResponse } from 'next/server'
 import bcryptjs from 'bcryptjs'
 import { error } from 'console';
